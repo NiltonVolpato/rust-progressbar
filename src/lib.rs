@@ -26,7 +26,7 @@ impl ProgressBar {
         current_value: 0,
         maximum_value: 100,
       },
-      widgets: vec![Percentage::new(), Literal::new("  "), Bar::new()],
+      widgets: vec![Percentage::new(), Literal::new(" "), Bar::new()],
       out: out,
       terminal_width: terminal_width,
     }
@@ -91,6 +91,17 @@ impl ProgressBar {
 
 #[cfg(test)]
 mod tests {
+  use crate::ProgressBar;
+
+  #[test]
+  fn render_works() {
+    let mut bar = ProgressBar::new();
+    bar.state.current_value = 50;
+    bar.terminal_width = 20;
+
+    assert_eq!(bar.render(), " 50% [######      ]");
+  }
+
   #[test]
   fn it_works() {
     assert_eq!(2 + 2, 4);
