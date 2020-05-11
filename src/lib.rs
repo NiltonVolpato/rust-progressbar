@@ -116,7 +116,7 @@ mod tests {
     {
       let mut bar = ProgressBar::new();
       bar.state.maximum_value = 2;
-      bar.terminal_width = 10;
+      bar.terminal_width = 18;
       bar.out = out.clone();
       for i in 0..=2 {
         bar.update(i);
@@ -127,7 +127,12 @@ mod tests {
     let output = std::str::from_utf8(r.get_ref()).unwrap();
     assert_eq!(
       output,
-      ["  0% [  ]\r", " 50% [# ]\r", "100% [##]\r\n",].concat()
+      [
+        "  0% [          ]\r",
+        " 50% [#####     ]\r",
+        "100% [##########]\r\n",
+      ]
+      .concat()
     );
   }
 
