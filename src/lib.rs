@@ -107,7 +107,7 @@ impl ProgressBar {
 
 #[cfg(test)]
 mod tests {
-  use crate::*;
+  use super::*;
   use std::io::Cursor;
 
   #[test]
