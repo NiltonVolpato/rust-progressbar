@@ -4,6 +4,13 @@ pub struct State {
 }
 
 impl State {
+  pub fn new(maximum_value: usize) -> State {
+    State {
+      current_value: 0,
+      maximum_value: maximum_value,
+    }
+  }
+
   pub fn fraction(&self) -> f64 {
     if self.current_value >= self.maximum_value {
       1.0

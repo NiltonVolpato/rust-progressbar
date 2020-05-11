@@ -7,14 +7,17 @@ use crate::terminal::get_terminal_width;
 pub use crate::widgets::{
   Bar, FixedWidthWidget, HorizontalFillWidget, Literal, Percentage, WidgetHolder,
 };
+use std::cell::RefCell;
 use std::io;
 use std::io::Write;
+use std::rc::Rc;
 
 pub struct ProgressBar {
   state: State,
   widgets: Vec<WidgetHolder>,
-  out: io::Stdout,
+  out: Rc<RefCell<dyn std::io::Write>>,
   terminal_width: usize,
+  finished: bool,
 }
 
 impl ProgressBar {
@@ -22,25 +25,38 @@ impl ProgressBar {
     let out = io::stdout();
     let terminal_width = get_terminal_width(&out);
     ProgressBar {
-      state: State {
-        current_value: 0,
-        maximum_value: 100,
-      },
+      state: State::new(100),
       widgets: vec![Percentage::new(), Literal::new(" "), Bar::new()],
-      out: out,
+      out: Rc::new(RefCell::new(out)),
       terminal_width: terminal_width,
+      finished: false,
     }
   }
 
-  pub fn update(&mut self, value: usize) {
+  fn update_internal(&mut self, value: usize) {
     self.state.current_value = value;
-    write!(self.out, "{}\r", self.render()).unwrap();
+    write!(self.out.borrow_mut(), "{}\r", self.render()).unwrap();
+  }
+
+  pub fn update(&mut self, value: usize) {
+    if self.finished {
+      panic!("trying to call update on a finished progress bar");
+    }
+    if value == self.state.maximum_value {
+      self.finish();
+      return;
+    }
+    self.update_internal(value);
     io::stdout().flush().unwrap();
   }
 
   pub fn finish(&mut self) {
-    self.update(self.state.maximum_value);
-    write!(self.out, "\n").unwrap();
+    if self.finished {
+      return;
+    }
+    self.update_internal(self.state.maximum_value);
+    write!(self.out.borrow_mut(), "\n").unwrap();
+    self.finished = true;
   }
 
   fn render(&self) -> String {
@@ -91,7 +107,29 @@ impl ProgressBar {
 
 #[cfg(test)]
 mod tests {
-  use crate::ProgressBar;
+  use crate::*;
+  use std::io::Cursor;
+
+  #[test]
+  fn works() {
+    let out: Rc<RefCell<_>> = Rc::new(RefCell::new(Cursor::new(Vec::<u8>::new())));
+    {
+      let mut bar = ProgressBar::new();
+      bar.state.maximum_value = 2;
+      bar.terminal_width = 10;
+      bar.out = out.clone();
+      for i in 0..=2 {
+        bar.update(i);
+      }
+      bar.finish();
+    }
+    let r = out.borrow();
+    let output = std::str::from_utf8(r.get_ref()).unwrap();
+    assert_eq!(
+      output,
+      ["  0% [  ]\r", " 50% [# ]\r", "100% [##]\r\n",].concat()
+    );
+  }
 
   #[test]
   fn render_works() {
