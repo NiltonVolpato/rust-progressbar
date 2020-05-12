@@ -21,3 +21,28 @@ impl FixedWidthWidget for Literal {
     self.value.clone()
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn is_fixed_width() {
+    assert!(if let WidgetHolder::FixedWidth(_) = Literal::new("abc") {
+      true
+    } else {
+      false
+    });
+  }
+
+  #[test]
+  fn works() {
+    assert_eq!(
+      Literal {
+        value: String::from("abc")
+      }
+      .render(&State::new(100)),
+      "abc"
+    );
+  }
+}
