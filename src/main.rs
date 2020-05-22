@@ -13,7 +13,7 @@ fn main() {
   let mut bar = ProgressBar::new();
   for i in 1..100 {
     bar.update(i);
-    thread::sleep(time::Duration::from_secs_f64(0.02));
+    thread::sleep(time::Duration::from_millis(20));
   }
   bar.finish();
   println!("Done!");
